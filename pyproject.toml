@@ -1,3 +1,4 @@
+
 [build-system]
 requires = ["setuptools>=77"]
 build-backend = "setuptools.build_meta"
@@ -7,6 +8,8 @@ name = "logvigil"
 version = "0.1.0"
 description = "Local defensive SOC log analyzer"
 requires-python = ">=3.13,<3.14"
+authors = [{ name = "Muhammad Mehdi" }]
+maintainers = [{ email = "muhammad.mehdi@aol.com" }]
 dependencies = []
 
 [project.optional-dependencies]
@@ -21,3 +24,4 @@ pythonpath = ["src"]
 
 [project.scripts]
 logvigil = "soc_assistant.main:main"
+
