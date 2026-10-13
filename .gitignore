@@ -1,0 +1,40 @@
+# Python virtual environment
+.venv/
+
+# Python cache
+__pycache__/
+*.py[cod]
+.pytest_cache/
+
+# macOS
+.DS_Store
+
+# Secrets and local configuration
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# Private logs and generated results
+data/private/
+data/raw/
+outputs/
+
+# Local test fixtures and generated reports
+synthetic_*.jsonl
+synthetic_*_report.json
+invalid_*_e2e.jsonl
+empty_e2e.jsonl
+
+# Local end-to-end fixture generators
+create_e2e_fixture.py
+create_e2e_extra.py
+
+# Build and packaging artifacts
+build/
+dist/
+*.egg-info/
+
+# Local source backups
+*.bak
