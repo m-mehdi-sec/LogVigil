@@ -1,4 +1,4 @@
-def build_analysis_report(events, findings):
+def build_analysis_report(events, findings, data_quality_warnings=None):
     """Build a structured SOC analysis report."""
     severity_counts = {
         "critical": 0,
@@ -150,4 +150,5 @@ def build_analysis_report(events, findings):
         },
         "findings": numbered_findings,
         "investigation_groups": investigation_groups,
+        "data_quality_warnings": data_quality_warnings or [],
     }

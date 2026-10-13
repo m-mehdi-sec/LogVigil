@@ -4,6 +4,7 @@ from pathlib import Path
 
 from soc_assistant.parser import parse_jsonl
 from soc_assistant.normalizer import normalize_events
+from soc_assistant.validator import validate_events
 from soc_assistant.detector import (
     detect_brute_force,
     detect_success_after_failures,
@@ -27,6 +28,7 @@ def format_summary(report):
         "================================",
         f"Events analyzed: {summary['events_analyzed']}",
         f"Findings: {summary['findings_count']}",
+        f"Data quality warnings: {len(report.get('data_quality_warnings', []))}",
         f"Investigation groups: {summary['investigation_groups_count']}",
         f"Highest severity: {(summary['highest_severity'] or 'none').upper()}",
     ]
@@ -138,6 +140,7 @@ def main():
 
     try:
         events = normalize_events(parse_jsonl(args.log_file))
+        data_quality_warnings = validate_events(events)
         findings = detect_brute_force(events)
         findings.extend(detect_success_after_failures(events))
         findings.extend(detect_account_enumeration(events))
@@ -161,7 +164,7 @@ def main():
         parser.exit(1, f"Error: {error}\n")
 
     if args.analyze_ai:
-        report = build_analysis_report(events, findings)
+        report = build_analysis_report(events, findings, data_quality_warnings)
         try:
             result = analyze_soc_report(
                 report,
@@ -173,14 +176,14 @@ def main():
         except (OllamaClientError, ValueError) as error:
             parser.exit(1, f"AI analysis failed: {error}\n")
     elif args.ai_context:
-        report = build_analysis_report(events, findings)
+        report = build_analysis_report(events, findings, data_quality_warnings)
         result = build_ai_context(
             report,
             max_groups=args.max_groups,
             max_findings=args.max_findings,
         )
     elif args.report:
-        result = build_analysis_report(events, findings)
+        result = build_analysis_report(events, findings, data_quality_warnings)
     else:
         result = findings
     result_json = (
