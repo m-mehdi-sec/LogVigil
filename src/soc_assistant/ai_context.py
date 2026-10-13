@@ -84,6 +84,17 @@ def build_ai_context(report, max_groups=5, max_findings=20):
                 "findings": selected_findings,
             })
 
+    warnings = report.get("data_quality_warnings", [])
+
+    missing_field_counts = {}
+
+    for warning in warnings:
+        for field in warning.get("missing_fields", []):
+            if field in ("timestamp", "computer", "username", "source_ip"):
+                missing_field_counts[field] = (
+                    missing_field_counts.get(field, 0) + 1
+                )
+
     return {
         "application": "LogVigil",
         "context_version": "1.0",
@@ -99,6 +110,14 @@ def build_ai_context(report, max_groups=5, max_findings=20):
             ],
         },
         "investigations": selected_groups,
+        "data_quality": {
+            "warning_count": len(warnings),
+            "missing_field_counts": missing_field_counts,
+            "interpretation": (
+                "Missing telemetry fields indicate limited visibility, "
+                "not evidence of malicious activity."
+            ),
+        },
         "limits": {
             "max_groups": max_groups,
             "max_findings": max_findings,
