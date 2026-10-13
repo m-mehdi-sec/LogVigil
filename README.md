@@ -131,4 +131,3 @@ Distribution packages have been built successfully, and the Wheel package has be
 The Ollama/Qwen integration has not yet been validated against a live model.
 
 LogVigil remains under active development.
-
