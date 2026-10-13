@@ -67,6 +67,7 @@ def normalize_event(event):
         "computer": system.get("computer"),
         "username": username,
         "source_ip": source_ip,
+        "logon_type": eventdata.get("logonType"),
         "record_id": record_id,
         "group_name": eventdata.get("targetUserName"),
         "group_sid": eventdata.get("targetSid"),

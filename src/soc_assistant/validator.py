@@ -11,9 +11,17 @@ def validate_events(events):
 
         missing_fields = [
             field
-            for field in ("timestamp", "computer", "username", "source_ip")
+            for field in ("timestamp", "computer", "username")
             if not event.get(field)
         ]
+
+        logon_type = event.get("logon_type")
+
+        if logon_type is not None:
+            logon_type = str(logon_type).strip()
+
+        if not event.get("source_ip") and logon_type != "2":
+            missing_fields.append("source_ip")
 
         if missing_fields:
             warnings.append({
