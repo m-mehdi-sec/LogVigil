@@ -1,5 +1,7 @@
 from datetime import datetime, timedelta
 
+from soc_assistant.ip_utils import is_usable_source_ip
+
 
 def detect_brute_force(events):
     """Detect five failed logins within five minutes."""
@@ -14,7 +16,7 @@ def detect_brute_force(events):
         source_ip = event.get("source_ip")
         computer = event.get("computer")
 
-        if not username or not source_ip or not computer:
+        if not username or not is_usable_source_ip(source_ip) or not computer:
             continue
 
         record_id = event.get("record_id")
@@ -163,7 +165,7 @@ def detect_account_enumeration(events):
         source_ip = event.get("source_ip")
         timestamp_value = event.get("timestamp")
 
-        if not computer or not username or not source_ip:
+        if not computer or not username or not is_usable_source_ip(source_ip):
             continue
 
         if not isinstance(timestamp_value, str):
