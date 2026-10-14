@@ -1,0 +1,1 @@
+{"timestamp": "2026-10-14T08:10:00+00:00", "data": {"win": {"system": {"eventID": "4740", "computer": "WIN-SRV2025", "eventRecordID": "2001"}, "eventdata": {"targetUserName": "testuser", "targetDomainName": "LAB", "callerComputerName": "WIN11-LAB"}}}}
