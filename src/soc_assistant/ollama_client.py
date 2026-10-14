@@ -1,3 +1,4 @@
+
 """Local-only Ollama chat client for defensive SOC analysis."""
 
 import json
@@ -64,6 +65,7 @@ def analyze_with_ollama(
     payload = {
         "model": model,
         "stream": False,
+        "think": False,
         "format": "json",
         "messages": [
             {"role": "system", "content": ai_request["system"]},
