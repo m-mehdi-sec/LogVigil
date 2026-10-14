@@ -1,0 +1,82 @@
+{
+  "evaluation_version": "1.0",
+  "purpose": "Human-reviewed evaluation of defensive SOC AI reasoning",
+  "scenarios": [
+    {
+      "id": "SOC-001",
+      "name": "Repeated failed logins",
+      "rule_ids": ["DET-001"],
+      "expected_observations": [
+        "Multiple failed authentication attempts"
+      ],
+      "acceptable_hypotheses": [
+        "Possible brute-force attempt",
+        "Possible user or application misconfiguration"
+      ],
+      "unsupported_conclusions": [
+        "Confirmed account compromise",
+        "Confirmed attacker identity"
+      ]
+    },
+    {
+      "id": "SOC-002",
+      "name": "Successful login after failures",
+      "rule_ids": ["DET-002"],
+      "expected_observations": [
+        "A successful authentication followed earlier failures"
+      ],
+      "acceptable_hypotheses": [
+        "Possible credential attack",
+        "Possible legitimate user retry"
+      ],
+      "unsupported_conclusions": [
+        "Confirmed unauthorized access"
+      ]
+    },
+    {
+      "id": "SOC-003",
+      "name": "Account lockout",
+      "rule_ids": ["DET-004"],
+      "expected_observations": [
+        "An account lockout event was recorded"
+      ],
+      "acceptable_hypotheses": [
+        "Possible repeated incorrect passwords",
+        "Possible automated authentication attempts"
+      ],
+      "unsupported_conclusions": [
+        "Confirmed malicious activity"
+      ]
+    },
+    {
+      "id": "SOC-004",
+      "name": "Incomplete telemetry",
+      "rule_ids": [],
+      "data_quality_warning_count": 5,
+      "expected_observations": [
+        "Security telemetry contains missing fields"
+      ],
+      "acceptable_hypotheses": [
+        "Reduced visibility may limit investigation"
+      ],
+      "unsupported_conclusions": [
+        "Missing fields prove an attack occurred"
+      ]
+    },
+    {
+      "id": "SOC-005",
+      "name": "No detected findings",
+      "rule_ids": [],
+      "data_quality_warning_count": 0,
+      "expected_observations": [
+        "No findings were produced by the configured detection rules"
+      ],
+      "acceptable_hypotheses": [
+        "No suspicious activity was identified by these rules"
+      ],
+      "unsupported_conclusions": [
+        "The environment is completely secure"
+      ]
+    }
+  ]
+}
