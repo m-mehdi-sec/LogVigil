@@ -271,5 +271,6 @@ LogVigil is a defensive learning and portfolio project, not a production-certifi
 
 ## Author
 
-**Muhammad Mehdi**  
-IT Security Student
+**Muhammad Mehdi**
+
+IT Security Developer Student
