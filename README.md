@@ -1,4 +1,3 @@
-
 # LogVigil
 
 **LogVigil v0.1.0 — Local SOC Log Analyzer with Optional AI Assistance**
@@ -250,9 +249,13 @@ A previous Wheel package was installed and launched successfully in an isolated 
 
 **Current version:** 0.1.0
 
+**Release status:** Published on GitHub
+
 **Long-term target:** 1.0.0
 
-Implemented and tested:
+### Phase 1 — Completed
+
+The initial release includes:
 
 - Rule-based Windows security detection
 - Investigation correlation
@@ -260,12 +263,26 @@ Implemented and tested:
 - SOC summaries
 - Command-line interface
 - Optional local Ollama/Qwen integration
+- Automated regression testing
+- Synthetic performance and detection evaluations
+- Python package build and installation validation
 
-Remaining before the v0.1.0 release is finalized:
+**Release:** [LogVigil v0.1.0](https://github.com/m-mehdi-sec/LogVigil/releases/tag/v0.1.0)
 
-- Final regression and package-build verification
-- Review of documentation and code changes
-- Git commit and release checkpoint
+### Phase 2 — Planned: Hyper-V SOC Lab Integration
+
+The next development phase focuses on evaluating LogVigil against authorized security events from a controlled Hyper-V lab environment.
+
+Planned activities include:
+
+- Integration testing with Windows security event exports
+- Validation using Sysmon and supported Wazuh event structures
+- Evaluation of detection rules against controlled lab scenarios
+- Verification of event normalization and investigation correlation
+- Optional local AI-assisted investigation of lab findings
+- Documentation of integration results and identified limitations
+
+Phase 2 is planned work and is not included in the v0.1.0 release.
 
 LogVigil is a defensive learning and portfolio project, not a production-certified SOC platform.
 
