@@ -268,3 +268,8 @@ Remaining before the v0.1.0 release is finalized:
 - Git commit and release checkpoint
 
 LogVigil is a defensive learning and portfolio project, not a production-certified SOC platform.
+
+## Author
+
+**Muhammad Mehdi**  
+IT Security Student
