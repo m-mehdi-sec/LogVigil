@@ -1,27 +1,32 @@
+
 # LogVigil
 
-**LogVigil v0.1.0 — Local SOC Log Analyzer with Optional AI Assistance**
+**LogVigil v1.0.0 — Local SOC Log Analyzer with Optional AI Assistance**
 
 LogVigil is a Python-based Security Operations Center (SOC) log analyzer designed for defensive security monitoring, detection, investigation, and learning.
 
-It processes Windows security events from JSONL logs, including supported Wazuh event structures, and generates structured findings and investigation reports.
+It processes Windows Security events from JSONL files, including supported Wazuh event structures, and generates structured findings and investigation reports.
 
-LogVigil can optionally use a locally hosted Ollama language model to assist with interpreting security findings.
+LogVigil also supports automated SMB log import, an offline SOC dashboard, and optional local AI-assisted analysis using Ollama, Qwen3, and retrieval-augmented generation (RAG).
 
 **Detection decisions are rule-based. AI analysis is advisory only.**
 
 ## Features
 
-- JSONL security log parsing
-- Windows and Wazuh event normalization
+- JSONL security log parsing and validation
+- Windows and supported Wazuh event normalization
 - Five rule-based security detections
 - Investigation correlation and grouping
 - Structured JSON reports
 - Human-readable SOC summaries
 - Command-line interface
+- Automated SMB log import
+- Duplicate prevention using SHA-256
+- Offline, read-only HTML dashboard
 - Bounded AI investigation context
-- Optional local Ollama/Qwen analysis
-- AI response validation
+- Optional local Ollama/Qwen3 analysis
+- Optional local RAG knowledge retrieval
+- AI response and evidence validation
 - Human review required for AI recommendations
 - No automatic security response actions
 
@@ -37,19 +42,22 @@ LogVigil can optionally use a locally hosted Ollama language model to assist wit
 
 Supported privileged group membership event IDs include 4728, 4732, and 4756.
 
-Findings require analyst review. A detection does not, by itself, confirm malicious activity.
+Findings require analyst review. A detection does not independently confirm malicious activity.
 
 ## Requirements
 
 - Python 3.13
-- macOS, Linux, or Windows with a compatible Python environment
+- macOS, Linux, or Windows for the core CLI
 - Ollama and a compatible local model for optional AI analysis
+- Mounted SMB share for the optional macOS importer
 
-The live AI integration has been tested on an Apple Silicon Mac with 16 GB RAM using Ollama 0.40.4 and Qwen3 4B.
+The SMB automation and dashboard were developed and tested in a controlled macOS and Windows Hyper-V lab environment.
 
 ## Installation
 
-Create and activate a Python virtual environment:
+Create and activate a Python virtual environment.
+
+On macOS or Linux:
 
 ```bash
 python3 -m venv .venv
@@ -102,17 +110,84 @@ Generate bounded AI investigation context without invoking a model:
 logvigil events.jsonl --ai-context
 ```
 
+## Automated SMB Log Import
+
+LogVigil v1.0.0 includes a macOS SMB importer:
+
+`src/soc_assistant/logvigil_smb_import.py`
+
+The importer analyzes Windows Security JSONL exports from a mounted SMB share.
+
+In the tested lab configuration:
+
+- A Windows PowerShell exporter runs through Task Scheduler.
+- A macOS LaunchAgent periodically runs the importer.
+- The configured intervals are approximately 15 minutes.
+- Source files remain on the SMB share.
+
+The importer:
+
+- Validates export filenames.
+- Applies file size and minimum age limits.
+- Processes up to 20 files per run.
+- Uses SHA-256 hashes to prevent duplicate processing.
+- Uses a local lock to prevent concurrent executions.
+- Saves analysis summaries locally.
+- Updates import state after successful analysis.
+- Does not modify or delete SMB source files.
+- Does not automatically invoke AI analysis.
+
+### SMB Import Limitations
+
+The SMB share must remain mounted and accessible.
+
+The configured macOS LaunchAgent requires an available user session.
+
+The Windows exporter applies event count, file size, and storage limits.
+
+There is no end-to-end acknowledgment protocol between the exporter and importer. Export delivery is therefore not guaranteed.
+
+Export retention and disk consumption require monitoring.
+
+A dashboard generation failure can occur after an import has already been recorded as successful.
+
+The SMB workflow is intended for an authorized local lab, not production-grade guaranteed-delivery log transport.
+
+## Offline SOC Dashboard
+
+LogVigil includes a local dashboard generator:
+
+`src/soc_assistant/logvigil_dashboard.py`
+
+The dashboard is a static, read-only HTML page generated from stored analysis summaries.
+
+It displays:
+
+- Number of analyzed files represented in the dashboard
+- Total analyzed events
+- Security findings
+- Data quality warnings
+- Investigation groups
+- Highest severity per file
+- Recent analysis summaries
+
+The dashboard displays up to 100 recent valid summaries.
+
+It does not provide live monitoring or automatic browser refresh.
+
+Counts represent stored analysis summaries, not deduplicated security incidents.
+
 ## Local AI Integration
 
 LogVigil supports optional local AI analysis through Ollama.
 
-The tested configuration is:
+The tested model is Qwen3 4B:
 
-- Ollama 0.40.4
-- Qwen3 4B (`qwen3:4b`)
-- Local endpoint: `http://127.0.0.1:11434/api/chat`
-- Non-streaming JSON responses
-- Thinking mode disabled for the tested Qwen3 configuration
+`qwen3:4b`
+
+The default local Ollama endpoint is:
+
+`http://127.0.0.1:11434/api/chat`
 
 Install Ollama separately and download the model:
 
@@ -126,21 +201,54 @@ Verify the model:
 ollama list
 ```
 
-Run local AI analysis:
+Run AI-assisted analysis:
 
 ```bash
 logvigil events.jsonl --analyze-ai --model qwen3:4b --ai-timeout 120
 ```
 
-Run a synthetic evaluation scenario:
-
-```bash
-logvigil evaluation/logs/soc_001_failed_logins.jsonl --analyze-ai --model qwen3:4b --ai-timeout 120
-```
-
-The CLI currently retains `qwen2.5:7b` as its default model name. Specify `--model qwen3:4b` when using the tested Qwen3 configuration.
+The CLI retains `qwen2.5:7b` as its previously documented default model. Specify `--model qwen3:4b` when using the tested Qwen3 configuration.
 
 AI analysis is optional. Core detection and reporting do not require Ollama.
+
+## Local RAG Integration
+
+LogVigil v1.0.0 introduces optional local retrieval-augmented generation (RAG).
+
+The implementation is located in:
+
+`src/soc_assistant/local_rag.py`
+
+Reference material is stored in the project's `knowledge/` directory.
+
+Run AI-assisted analysis with RAG:
+
+```bash
+logvigil events.jsonl --analyze-ai --rag --model qwen3:4b
+```
+
+The `--rag` option requires `--analyze-ai`.
+
+The retrieval process selects relevant local reference material and supplies it to the AI as untrusted reference context.
+
+### Included Knowledge Material
+
+The initial knowledge base contains an original LogVigil training note about Windows account lockouts and Event ID 4740.
+
+The note explains that account lockouts should be correlated with related authentication events before drawing conclusions.
+
+**The included reference is not an official Microsoft, MITRE, or NIST publication.**
+
+The current RAG implementation is a small local reference-retrieval system, not a comprehensive cybersecurity knowledge base.
+
+### RAG Safety Boundaries
+
+- RAG is optional.
+- Reference material is treated as untrusted data.
+- Retrieved text is not security evidence.
+- Retrieved text cannot authorize response actions.
+- AI recommendations require human review.
+- No AI-generated instructions are executed automatically.
 
 ## AI Analysis Output
 
@@ -160,13 +268,13 @@ The output includes:
 - `execution_authorized: false`
 - `requires_human_review: true`
 
-These fields communicate that the analysis must not be treated as authorization to perform security actions.
+These fields communicate that AI analysis must not be treated as authorization to perform security actions.
 
 ## AI Limitations
 
 Local language models can generate incorrect or unsupported statements even when their JSON responses are valid.
 
-Observed limitations during evaluation included:
+Observed limitations during earlier evaluations included:
 
 - Confusing IP addresses with compromised accounts
 - Incorrectly describing investigation group counts
@@ -174,7 +282,7 @@ Observed limitations during evaluation included:
 - Making unsupported assumptions about user privileges
 - Focusing on metadata instead of security implications
 
-A valid JSON response does not guarantee factual accuracy.
+RAG may provide useful context but does not guarantee factual accuracy.
 
 Analysts must verify observations, hypotheses, and recommendations against the original security evidence.
 
@@ -182,20 +290,28 @@ LogVigil is not an autonomous incident response system.
 
 ## Security
 
-- Designed for defensive security analysis
-- Uses a loopback Ollama endpoint by default
-- Does not automatically execute AI recommendations
-- Requires human review of AI-generated advice
-- Separates trusted instructions from untrusted telemetry
-- Applies limits to AI request and response sizes
-- Validates AI response structure
-- Disables HTTP redirects in the Ollama client
-- Disables proxy use for local Ollama requests
-- Does not require an external cloud AI service
+LogVigil is designed for defensive security analysis.
+
+Implemented safeguards include:
+
+- Rule-based detection independent of AI
+- Optional AI execution
+- Loopback Ollama endpoint by default
+- Bounded AI investigation context
+- AI response and evidence validation
+- Human review required for AI recommendations
+- No automatic execution of AI recommendations
+- Separation of trusted instructions and untrusted data
+- Input size and parsing limits
+- HTTP redirects disabled in the Ollama client
+- Proxy use disabled for local Ollama requests
+- No automatic deletion of SMB source files by the importer
+
+These safeguards reduce risk but do not guarantee that the software is free of vulnerabilities.
 
 Use synthetic or explicitly authorized security logs.
 
-Avoid placing sensitive production telemetry into test datasets without appropriate authorization and handling controls.
+Never commit private telemetry, credentials, authentication tokens, or sensitive production data to a public repository.
 
 ## Testing
 
@@ -211,9 +327,22 @@ Run automated tests:
 python -m pytest -q
 ```
 
-### Verified Evaluation Results
+### Version 1.0.0 Validation
 
-At the time of the v0.1.0 evaluation:
+During v1.0.0 preparation:
+
+- 400 automated tests passed.
+- SMB importer and dashboard regression tests were added.
+- A synthetic Windows Event ID 4740 scenario triggered DET-004.
+- DET-004 was successfully analyzed using local Qwen3 and RAG.
+- The AI output required human review and did not authorize execution.
+- The SMB importer and dashboard were manually tested in the local lab.
+
+These tests demonstrate selected functionality and safety properties. They do not establish production reliability or guarantee AI accuracy.
+
+### Historical v0.1.0 Evaluation
+
+The earlier v0.1.0 evaluation included:
 
 - 271 automated tests passed
 - 20,000 mixed synthetic Windows events processed in 4.006 seconds
@@ -224,8 +353,6 @@ At the time of the v0.1.0 evaluation:
 - Three synthetic SOC scenarios analyzed successfully using live Ollama/Qwen3 4B
 
 Performance measurements are environment-specific and are not guaranteed benchmarks.
-
-The live AI evaluations demonstrate integration functionality, not perfect analytical accuracy.
 
 ## Package Build
 
@@ -243,19 +370,17 @@ python -m build
 
 Generated packages are stored in `dist/`.
 
-A previous Wheel package was installed and launched successfully in an isolated environment.
+A clean package build and installation check should be completed before publishing the v1.0.0 release.
 
 ## Project Status
 
-**Current version:** 0.1.0
+**Current development version:** 1.0.0
 
-**Release status:** Published on GitHub
-
-**Long-term target:** 1.0.0
+**Release status:** Preparing v1.0.0 for publication
 
 ### Phase 1 — Completed
 
-The initial release includes:
+The initial release included:
 
 - Rule-based Windows security detection
 - Investigation correlation
@@ -267,22 +392,32 @@ The initial release includes:
 - Synthetic performance and detection evaluations
 - Python package build and installation validation
 
-**Release:** [LogVigil v0.1.0](https://github.com/m-mehdi-sec/LogVigil/releases/tag/v0.1.0)
+**Published release:** [LogVigil v0.1.0](https://github.com/m-mehdi-sec/LogVigil/releases/tag/v0.1.0)
 
-### Phase 2 — Planned: Hyper-V SOC Lab Integration
+### Phase 2 — Implemented, Final Validation in Progress
 
-The next development phase focuses on evaluating LogVigil against authorized security events from a controlled Hyper-V lab environment.
+The second development phase adds:
 
-Planned activities include:
+- Windows Security export integration from the Hyper-V lab
+- Automated SMB-based import on macOS
+- Local import state and duplicate prevention
+- Offline HTML dashboard
+- Optional local RAG knowledge retrieval
+- Qwen3 integration with retrieved reference context
+- Additional regression and integration testing
+- Documentation of limitations and safety boundaries
 
-- Integration testing with Windows security event exports
-- Validation using Sysmon and supported Wazuh event structures
-- Evaluation of detection rules against controlled lab scenarios
-- Verification of event normalization and investigation correlation
-- Optional local AI-assisted investigation of lab findings
-- Documentation of integration results and identified limitations
+### Future Development
 
-Phase 2 is planned work and is not included in the v0.1.0 release.
+Potential future improvements include:
+
+- Broader authorized detection coverage
+- Additional validated local knowledge sources
+- Stronger export acknowledgment and retention controls
+- More complete dashboard functionality
+- Improved packaging and deployment automation
+
+Autonomous security response capabilities are outside the scope of LogVigil v1.0.0 and belong to a separate future project.
 
 LogVigil is a defensive learning and portfolio project, not a production-certified SOC platform.
 

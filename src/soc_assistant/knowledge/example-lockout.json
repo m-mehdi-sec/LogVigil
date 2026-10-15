@@ -1,0 +1,5 @@
+{
+  "title": "Windows account lockout - Event ID 4740",
+  "source": "LogVigil original training note (not an official Microsoft, MITRE, or NIST publication)",
+  "text": "Windows Security Event ID 4740 records an account lockout. A SOC analyst can correlate the account, timestamp, and caller computer with failed logons such as Event ID 4625. A lockout alone does not prove malicious activity. Review evidence and request human approval before any response action."
+}

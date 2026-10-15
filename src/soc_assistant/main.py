@@ -114,8 +114,14 @@ def main():
         help="Declare input telemetry as a controlled simulation"
     )
 
+    parser.add_argument(
+        "--rag", action="store_true",
+        help="Use local curated knowledge with explicit --analyze-ai",
+    )
     args = parser.parse_args()
 
+    if args.rag and not args.analyze_ai:
+        parser.error("--rag requires --analyze-ai")
     if args.simulation and not (args.analyze_ai or args.ai_context):
         parser.error("--simulation requires --analyze-ai or --ai-context")
 
@@ -182,6 +188,7 @@ def main():
                 max_groups=args.max_groups,
                 max_findings=args.max_findings,
                 simulation=args.simulation,
+                rag_directory=(Path(__file__).resolve().parent / "knowledge") if args.rag else None,
             )
         except (OllamaClientError, ValueError) as error:
             parser.exit(1, f"AI analysis failed: {error}\n")
