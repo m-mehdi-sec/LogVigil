@@ -94,7 +94,22 @@ def test_request_disables_streaming():
     payload = json.loads(mocked.call_args.args[0].data)
 
     assert payload["stream"] is False
-    assert payload["format"] == "json"
+    schema = payload["format"]
+    assert schema["type"] == "object"
+    assert schema["additionalProperties"] is False
+    assert set(schema["required"]) == {
+        "risk_level",
+        "observations",
+        "hypotheses",
+        "recommended_actions",
+    }
+    assert schema["properties"]["risk_level"]["enum"] == [
+        "critical",
+        "high",
+        "medium",
+        "low",
+        "informational",
+    ]
 
 
 def test_request_uses_separate_roles():

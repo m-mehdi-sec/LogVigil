@@ -15,6 +15,41 @@ DEFAULT_TIMEOUT = 30
 MAX_HTTP_RESPONSE_BYTES = 65536
 MAX_REQUEST_BYTES = 65536
 
+SOC_RESPONSE_SCHEMA = {
+    "type": "object",
+    "properties": {
+        "risk_level": {
+            "type": "string",
+            "enum": [
+                "critical",
+                "high",
+                "medium",
+                "low",
+                "informational",
+            ],
+        },
+        "observations": {
+            "type": "array",
+            "items": {"type": "string"},
+        },
+        "hypotheses": {
+            "type": "array",
+            "items": {"type": "string"},
+        },
+        "recommended_actions": {
+            "type": "array",
+            "items": {"type": "string"},
+        },
+    },
+    "required": [
+        "risk_level",
+        "observations",
+        "hypotheses",
+        "recommended_actions",
+    ],
+    "additionalProperties": False,
+}
+
 
 class NoRedirectHandler(HTTPRedirectHandler):
     """Prevent Ollama requests from following redirects."""
@@ -66,7 +101,7 @@ def analyze_with_ollama(
         "model": model,
         "stream": False,
         "think": False,
-        "format": "json",
+        "format": SOC_RESPONSE_SCHEMA,
         "messages": [
             {"role": "system", "content": ai_request["system"]},
             {"role": "user", "content": ai_request["user"]},
