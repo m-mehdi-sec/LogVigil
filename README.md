@@ -47,7 +47,8 @@ Findings require analyst review. A detection does not independently confirm mali
 ## Requirements
 
 - Python 3.13
-- macOS, Linux, or Windows for the core CLI
+- macOS or Linux for the core CLI (requires `os.O_NOFOLLOW` support)
+- Windows is supported as a Security event export source; native Windows CLI execution is not currently supported
 - Ollama and a compatible local model for optional AI analysis
 - Mounted SMB share for the optional macOS importer
 
