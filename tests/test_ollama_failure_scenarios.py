@@ -66,7 +66,7 @@ def test_timeout_failure(monkeypatch):
 
     with pytest.raises(
         OllamaClientError,
-        match="Unable to connect to local Ollama",
+        match="Local Ollama request timed out",
     ):
         analyze_with_ollama(AI_REQUEST)
 
@@ -142,5 +142,21 @@ def test_oversized_response(monkeypatch):
     with pytest.raises(
         OllamaClientError,
         match="Ollama response exceeds size limit",
+    ):
+        analyze_with_ollama(AI_REQUEST)
+
+
+def test_timeout_wrapped_in_urlerror(monkeypatch):
+    def fake_urlopen(request, timeout):
+        raise URLError(TimeoutError("Connection timed out"))
+
+    monkeypatch.setattr(
+        "soc_assistant.ollama_client.urlopen",
+        fake_urlopen,
+    )
+
+    with pytest.raises(
+        OllamaClientError,
+        match="Local Ollama request timed out",
     ):
         analyze_with_ollama(AI_REQUEST)

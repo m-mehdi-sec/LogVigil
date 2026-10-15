@@ -137,6 +137,12 @@ def analyze_with_ollama(
             f"Ollama HTTP error: {error.code}"
         ) from error
     except (URLError, TimeoutError, OSError) as error:
+        if isinstance(error, TimeoutError) or isinstance(
+            getattr(error, "reason", None), TimeoutError
+        ):
+            raise OllamaClientError(
+                "Local Ollama request timed out"
+            ) from error
         raise OllamaClientError(
             "Unable to connect to local Ollama"
         ) from error

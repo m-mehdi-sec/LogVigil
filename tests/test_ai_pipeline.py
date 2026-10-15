@@ -265,6 +265,54 @@ def test_pipeline_retry_uses_remaining_time_budget(report, ai_result):
 
 
 
+
+@pytest.mark.parametrize("remaining", [0.0, 0.1, 4.99])
+def test_pipeline_skips_retry_when_time_is_insufficient(
+    report, ai_result, remaining
+):
+    invalid = copy.deepcopy(ai_result)
+    invalid["observations"] = [
+        "192.0.2.50 indicates a controlled simulation"
+    ]
+
+    with (
+        patch(
+            "soc_assistant.ai_pipeline.analyze_with_ollama",
+            return_value=invalid,
+        ) as mocked,
+        patch(
+            "soc_assistant.ai_pipeline.monotonic",
+            side_effect=[100.0, 130.0 - remaining],
+        ),
+    ):
+        with pytest.raises(ValueError, match="time budget exhausted"):
+            analyze_soc_report(report, timeout=30)
+
+    assert mocked.call_count == 1
+
+
+def test_pipeline_allows_retry_at_minimum_time_budget(report, ai_result):
+    invalid = copy.deepcopy(ai_result)
+    invalid["observations"] = [
+        "192.0.2.50 indicates a controlled simulation"
+    ]
+
+    with (
+        patch(
+            "soc_assistant.ai_pipeline.analyze_with_ollama",
+            side_effect=[invalid, ai_result],
+        ) as mocked,
+        patch(
+            "soc_assistant.ai_pipeline.monotonic",
+            side_effect=[100.0, 125.0],
+        ),
+    ):
+        analyze_soc_report(report, timeout=30)
+
+    assert mocked.call_count == 2
+    assert mocked.call_args_list[1].kwargs["timeout"] == 5.0
+
+
 def test_pipeline_exposes_verified_evidence(report, ai_result):
     with patch(
         "soc_assistant.ai_pipeline.analyze_with_ollama",

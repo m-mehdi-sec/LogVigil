@@ -103,7 +103,7 @@ def test_timeout_is_handled(request_data):
         side_effect=TimeoutError("Timed out"),
     ):
         with pytest.raises(
-            OllamaClientError, match="Unable to connect"
+            OllamaClientError, match="Local Ollama request timed out"
         ):
             analyze_with_ollama(request_data)
 

@@ -9,6 +9,7 @@ from time import monotonic
 
 
 MAX_EVIDENCE_ATTEMPTS = 2
+MIN_RETRY_TIME_SECONDS = 5
 EVIDENCE_RETRY_INSTRUCTIONS = (
     "Your previous response was rejected because it contained an "
     "unsupported evidence claim. Regenerate the entire JSON analysis. "
@@ -57,7 +58,9 @@ def analyze_soc_report(
 
     for attempt in range(MAX_EVIDENCE_ATTEMPTS):
         remaining = timeout if attempt == 0 else deadline - monotonic()
-        if remaining <= 0:
+        if remaining <= 0 or (
+            attempt > 0 and remaining < MIN_RETRY_TIME_SECONDS
+        ):
             raise ValueError("AI analysis time budget exhausted")
 
         current_request = request
