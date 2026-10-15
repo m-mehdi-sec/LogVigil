@@ -1,5 +1,7 @@
 """Prepare bounded, structured SOC context for local AI analysis."""
 
+from soc_assistant.ip_utils import classify_source_ip
+
 MAX_FIELD_LENGTH = 256
 
 SEVERITY_RANK = {
@@ -73,6 +75,21 @@ def build_ai_context(report, max_groups=5, max_findings=20):
 
                 elif isinstance(value, (int, float, bool)):
                     safe_finding[key] = value
+
+            source_ip = safe_finding.get("source_ip")
+            if isinstance(source_ip, str):
+                safe_finding["source_ip_classification"] = (
+                    classify_source_ip(source_ip)
+                )
+
+            evidence_ids = finding.get("evidence_record_ids")
+            if isinstance(evidence_ids, list):
+                safe_ids = [
+                    record_id
+                    for record_id in evidence_ids[:20]
+                    if type(record_id) is int and record_id >= 0
+                ]
+                safe_finding["evidence_record_ids"] = safe_ids
 
             selected_findings.append(safe_finding)
             remaining -= 1
