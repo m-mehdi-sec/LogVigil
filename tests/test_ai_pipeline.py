@@ -163,3 +163,186 @@ def test_pipeline_preserves_original_report(report, ai_result):
         analyze_soc_report(report)
 
     assert report == original
+
+
+
+def test_pipeline_retries_rejected_evidence(report, ai_result):
+    invalid = copy.deepcopy(ai_result)
+    invalid["observations"] = [
+        "192.0.2.50 indicates this is a controlled simulation"
+    ]
+
+    with patch(
+        "soc_assistant.ai_pipeline.analyze_with_ollama",
+        side_effect=[invalid, ai_result],
+    ) as mocked:
+        result = analyze_soc_report(report, timeout=30)
+
+    assert mocked.call_count == 2
+    assert result["ai_analysis"]["observations"] == ai_result["observations"]
+    assert result["ai_analysis"]["execution_authorized"] is False
+    assert result["ai_analysis"]["requires_human_review"] is True
+
+
+def test_pipeline_rejects_two_invalid_evidence_responses(report, ai_result):
+    invalid = copy.deepcopy(ai_result)
+    invalid["hypotheses"] = [
+        "The account was intentionally compromised"
+    ]
+
+    with patch(
+        "soc_assistant.ai_pipeline.analyze_with_ollama",
+        return_value=invalid,
+    ) as mocked:
+        with pytest.raises(ValueError, match="account compromise"):
+            analyze_soc_report(report)
+
+    assert mocked.call_count == 2
+
+
+def test_pipeline_does_not_retry_connection_errors(report):
+    with patch(
+        "soc_assistant.ai_pipeline.analyze_with_ollama",
+        side_effect=OllamaClientError("Connection failed"),
+    ) as mocked:
+        with pytest.raises(OllamaClientError):
+            analyze_soc_report(report)
+
+    assert mocked.call_count == 1
+
+
+def test_pipeline_does_not_retry_successful_analysis(report, ai_result):
+    with patch(
+        "soc_assistant.ai_pipeline.analyze_with_ollama",
+        return_value=ai_result,
+    ) as mocked:
+        analyze_soc_report(report)
+
+    assert mocked.call_count == 1
+
+
+def test_pipeline_retry_uses_same_original_telemetry(report, ai_result):
+    invalid = copy.deepcopy(ai_result)
+    invalid["observations"] = [
+        "192.0.2.50 indicates a controlled simulation"
+    ]
+
+    with patch(
+        "soc_assistant.ai_pipeline.analyze_with_ollama",
+        side_effect=[invalid, ai_result],
+    ) as mocked:
+        analyze_soc_report(report)
+
+    first = mocked.call_args_list[0].args[0]
+    second = mocked.call_args_list[1].args[0]
+
+    assert first["user"] == second["user"]
+    assert first["response_format"] == second["response_format"]
+    assert "unsupported evidence claim" in second["system"]
+    assert "192.0.2.50 indicates" not in second["system"]
+
+
+def test_pipeline_retry_uses_remaining_time_budget(report, ai_result):
+    invalid = copy.deepcopy(ai_result)
+    invalid["observations"] = [
+        "192.0.2.50 indicates a controlled simulation"
+    ]
+
+    with (
+        patch(
+            "soc_assistant.ai_pipeline.analyze_with_ollama",
+            side_effect=[invalid, ai_result],
+        ) as mocked,
+        patch(
+            "soc_assistant.ai_pipeline.monotonic",
+            side_effect=[100.0, 105.0],
+        ),
+    ):
+        analyze_soc_report(report, timeout=30)
+
+    assert mocked.call_args_list[0].kwargs["timeout"] == 30
+    assert mocked.call_args_list[1].kwargs["timeout"] == 25
+
+
+
+def test_pipeline_exposes_verified_evidence(report, ai_result):
+    with patch(
+        "soc_assistant.ai_pipeline.analyze_with_ollama",
+        return_value=ai_result,
+    ):
+        result = analyze_soc_report(report, simulation=True)
+
+    evidence = result["verified_evidence"]
+
+    assert evidence["source"] == "logvigil_deterministic_analysis"
+    assert evidence["scope"] == "analyzed_telemetry_only"
+    assert evidence["simulation_status"] == "user_declared_simulation"
+    assert evidence["summary"]["events_analyzed"] == 50
+    assert evidence["summary"]["findings_count"] == 2
+
+
+def test_pipeline_verified_evidence_uses_context_not_ai_claims(
+    report, ai_result
+):
+    modified = copy.deepcopy(ai_result)
+    modified["hypotheses"] = [
+        "A possible credential attack requires investigation"
+    ]
+
+    with patch(
+        "soc_assistant.ai_pipeline.analyze_with_ollama",
+        return_value=modified,
+    ):
+        result = analyze_soc_report(report)
+
+    evidence = result["verified_evidence"]
+
+    assert len(evidence["findings"]) == 2
+    assert evidence["findings"][0]["rule_id"] == "DET-001"
+    assert evidence["findings"][1]["rule_id"] == "DET-002"
+    assert "hypotheses" not in evidence
+    assert "recommended_actions" not in evidence
+
+
+def test_pipeline_verified_evidence_is_separate_from_ai_analysis(
+    report, ai_result
+):
+    with patch(
+        "soc_assistant.ai_pipeline.analyze_with_ollama",
+        return_value=ai_result,
+    ):
+        result = analyze_soc_report(report)
+
+    assert "verified_evidence" not in result["ai_analysis"]
+    assert result["ai_analysis"]["execution_authorized"] is False
+    assert result["ai_analysis"]["requires_human_review"] is True
+
+
+
+def test_pipeline_reports_ai_attempt_count(report, ai_result):
+    with patch(
+        "soc_assistant.ai_pipeline.analyze_with_ollama",
+        return_value=ai_result,
+    ):
+        result = analyze_soc_report(report)
+
+    assert result["ai_attempts"] == 1
+    assert result["ai_validation_status"] == "passed_limited_checks"
+    assert "not independently fact-verified" in result["ai_evidence_notice"]
+
+
+def test_pipeline_reports_retry_attempt_count(report, ai_result):
+    invalid = copy.deepcopy(ai_result)
+    invalid["observations"] = [
+        "192.0.2.50 indicates a controlled simulation"
+    ]
+
+    with patch(
+        "soc_assistant.ai_pipeline.analyze_with_ollama",
+        side_effect=[invalid, ai_result],
+    ):
+        result = analyze_soc_report(report)
+
+    assert result["ai_attempts"] == 2
+    assert result["ai_analysis"]["execution_authorized"] is False
+    assert result["ai_analysis"]["requires_human_review"] is True

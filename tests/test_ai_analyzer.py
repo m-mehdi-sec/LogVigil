@@ -102,3 +102,33 @@ def test_json_response_parsing():
     response = sample_response()
 
     assert parse_ai_response(json.dumps(response)) == response
+
+
+
+def test_request_rejects_ip_based_simulation_inference():
+    request = build_ai_request(sample_context())
+    instructions = request["system"]
+
+    assert "192.0.2.0/24" in instructions
+    assert "198.51.100.0/24" in instructions
+    assert "203.0.113.0/24" in instructions
+    assert "do not cite IP address classification as proof" in instructions
+    assert "Only simulation_status" in instructions
+
+
+def test_request_distinguishes_failed_logins_from_compromise():
+    request = build_ai_request(sample_context())
+    instructions = request["system"]
+
+    assert "Failed logins alone do not establish" in instructions
+    assert "without supporting evidence" in instructions
+    assert "do not invent attack objectives or exercise goals" in instructions
+
+
+def test_request_preserves_human_review_and_investigation():
+    request = build_ai_request(sample_context())
+    instructions = request["system"]
+
+    assert "Do not recommend automatic blocking" in instructions
+    assert "recommend reviewing the" in instructions
+    assert "simulated detection and investigation workflow" in instructions
