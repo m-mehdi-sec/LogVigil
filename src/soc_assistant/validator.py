@@ -20,7 +20,13 @@ def validate_events(events):
         if logon_type is not None:
             logon_type = str(logon_type).strip()
 
-        if not event.get("source_ip") and logon_type != "2":
+        # Local, service, unlock, and cached logons may lack a source IP.
+        local_logon_types = {"2", "5", "7", "11"}
+
+        if (
+            not event.get("source_ip")
+            and logon_type not in local_logon_types
+        ):
             missing_fields.append("source_ip")
 
         if missing_fields:
