@@ -124,3 +124,29 @@ def test_cli_simulation_rejected_without_ai_mode(
         cli.main()
 
     assert error.value.code == 2
+
+
+@pytest.mark.parametrize(
+    ("simulation", "expected"),
+    [
+        (True, "user_declared_simulation"),
+        (False, "unknown"),
+    ],
+)
+def test_pipeline_exposes_simulation_status(report, simulation, expected):
+    ai_result = {
+        "risk_level": "low",
+        "observations": [],
+        "hypotheses": [],
+        "recommended_actions": [],
+    }
+
+    with patch(
+        "soc_assistant.ai_pipeline.analyze_with_ollama",
+        return_value=ai_result,
+    ):
+        result = analyze_soc_report(report, simulation=simulation)
+
+    assert result["simulation_status"] == expected
+    assert result["ai_analysis"]["execution_authorized"] is False
+    assert result["ai_analysis"]["requires_human_review"] is True

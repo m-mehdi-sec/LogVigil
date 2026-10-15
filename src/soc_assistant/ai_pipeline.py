@@ -47,6 +47,7 @@ def analyze_soc_report(
     return {
         "application": "LogVigil",
         "analysis_version": "1.0",
+        "simulation_status": context["simulation_status"],
         "model": model,
         "context_summary": {
             "investigations_sent": len(context["investigations"]),
