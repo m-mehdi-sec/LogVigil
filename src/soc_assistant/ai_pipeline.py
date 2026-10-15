@@ -27,7 +27,7 @@ EVIDENCE_RETRY_INSTRUCTIONS = (
 def analyze_soc_report(
     report,
     *,
-    model="qwen2.5:7b",
+    model="qwen3:4b",
     timeout=30,
     max_groups=5,
     max_findings=20,

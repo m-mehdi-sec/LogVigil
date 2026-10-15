@@ -208,7 +208,7 @@ Run AI-assisted analysis:
 logvigil events.jsonl --analyze-ai --model qwen3:4b --ai-timeout 120
 ```
 
-The CLI retains `qwen2.5:7b` as its previously documented default model. Specify `--model qwen3:4b` when using the tested Qwen3 configuration.
+The default local AI model is `qwen3:4b`. Use `--model` to select another installed Ollama model.
 
 AI analysis is optional. Core detection and reporting do not require Ollama.
 

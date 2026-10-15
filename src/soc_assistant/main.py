@@ -98,8 +98,8 @@ def main():
     )
     parser.add_argument(
         "--model",
-        default="qwen2.5:7b",
-        help="Local Ollama model (default: qwen2.5:7b)"
+        default="qwen3:4b",
+        help="Local Ollama model (default: qwen3:4b)"
     )
     parser.add_argument(
         "--ai-timeout",

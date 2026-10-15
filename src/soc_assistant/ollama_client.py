@@ -70,7 +70,7 @@ class OllamaClientError(Exception):
 
 def analyze_with_ollama(
     ai_request,
-    model="qwen2.5:7b",
+    model="qwen3:4b",
     timeout=DEFAULT_TIMEOUT,
 ):
     """Send a bounded SOC request to a local Ollama model."""
