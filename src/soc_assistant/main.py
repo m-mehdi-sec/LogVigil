@@ -108,7 +108,16 @@ def main():
         help="Ollama timeout in seconds (default: 30)"
     )
 
+    parser.add_argument(
+        "--simulation",
+        action="store_true",
+        help="Declare input telemetry as a controlled simulation"
+    )
+
     args = parser.parse_args()
+
+    if args.simulation and not (args.analyze_ai or args.ai_context):
+        parser.error("--simulation requires --analyze-ai or --ai-context")
 
     if args.analyze_ai and (
         args.ai_context or args.report or args.summary
@@ -172,6 +181,7 @@ def main():
                 timeout=args.ai_timeout,
                 max_groups=args.max_groups,
                 max_findings=args.max_findings,
+                simulation=args.simulation,
             )
         except (OllamaClientError, ValueError) as error:
             parser.exit(1, f"AI analysis failed: {error}\n")
@@ -181,6 +191,7 @@ def main():
             report,
             max_groups=args.max_groups,
             max_findings=args.max_findings,
+            simulation=args.simulation,
         )
     elif args.report:
         result = build_analysis_report(events, findings, data_quality_warnings)

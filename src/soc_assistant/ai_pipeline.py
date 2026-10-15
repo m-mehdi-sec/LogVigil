@@ -13,6 +13,7 @@ def analyze_soc_report(
     timeout=30,
     max_groups=5,
     max_findings=20,
+    simulation=False,
 ):
     """Analyze a SOC report using the configured local AI client.
 
@@ -32,6 +33,7 @@ def analyze_soc_report(
         report,
         max_groups=max_groups,
         max_findings=max_findings,
+        simulation=simulation,
     )
 
     request = build_ai_request(context)
