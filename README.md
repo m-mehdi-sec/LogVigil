@@ -370,13 +370,13 @@ python -m build
 
 Generated packages are stored in `dist/`.
 
-A clean package build and installation check should be completed before publishing the v1.0.0 release.
+A clean package build and installation check were completed as part of the v1.0.0 release validation.
 
 ## Project Status
 
-**Current development version:** 1.0.0
+**Latest stable version:** 1.0.0
 
-**Release status:** Preparing v1.0.0 for publication
+**Release status:** v1.0.0 officially published on October 15, 2026.
 
 ### Phase 1 — Completed
 
