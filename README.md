@@ -73,6 +73,28 @@ python -m pip install -e .
 
 On Windows, use the appropriate virtual environment activation command for your shell.
 
+## Desktop GUI (v1.1.0 Development)
+
+LogVigil provides an optional PySide6 desktop interface with seven pages: Dashboard, Log Import, Run Analysis, AI Investigation, Findings, Reports, and Settings.
+
+Install the GUI dependency:
+
+```bash
+python -m pip install -e ".[gui]"
+```
+
+Start the GUI:
+
+```bash
+python -m soc_assistant.gui.app
+```
+
+Run these commands inside an activated Python virtual environment.
+
+The GUI uses the existing deterministic detection engine. Optional AI investigation requires a running local Ollama service and a compatible model such as `qwen3:4b`. AI assessments are advisory and require human review. No automatic security response actions are performed.
+
+The GUI is under development and is not included in the published v1.0.0 release.
+
 ## Command-Line Usage
 
 Display available options:

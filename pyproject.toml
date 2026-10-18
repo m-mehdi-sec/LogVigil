@@ -14,6 +14,7 @@ dependencies = []
 
 [project.optional-dependencies]
 dev = ["pytest>=8,<10"]
+gui = ["PySide6>=6.12,<7"]
 
 [tool.setuptools.packages.find]
 where = ["src"]
@@ -26,4 +27,4 @@ pythonpath = ["src"]
 logvigil = "soc_assistant.main:main"
 
 [tool.setuptools.package-data]
-soc_assistant = ["knowledge/*.json"]
+soc_assistant = ["knowledge/*.json", "gui/assets/*.svg"]
