@@ -1,7 +1,7 @@
 
 # LogVigil
 
-**LogVigil v1.0.0 — Local SOC Log Analyzer with Optional AI Assistance**
+**LogVigil v1.1.0 — Local SOC Log Analyzer with Desktop GUI and Optional AI Assistance**
 
 LogVigil is a Python-based Security Operations Center (SOC) log analyzer designed for defensive security monitoring, detection, investigation, and learning.
 
