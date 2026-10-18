@@ -1,4 +1,3 @@
-
 # LogVigil
 
 **LogVigil v1.1.0 — Local SOC Log Analyzer with Desktop GUI and Optional AI Assistance**
@@ -7,7 +6,7 @@ LogVigil is a Python-based Security Operations Center (SOC) log analyzer designe
 
 It processes Windows Security events from JSONL files, including supported Wazuh event structures, and generates structured findings and investigation reports.
 
-LogVigil also supports automated SMB log import, an offline SOC dashboard, and optional local AI-assisted analysis using Ollama, Qwen3, and retrieval-augmented generation (RAG).
+LogVigil v1.1.0 adds an optional PySide6 desktop GUI alongside the existing command-line interface, automated SMB log import, offline HTML dashboard, and local AI-assisted analysis using Ollama, Qwen3, and retrieval-augmented generation (RAG).
 
 **Detection decisions are rule-based. AI analysis is advisory only.**
 
@@ -20,6 +19,9 @@ LogVigil also supports automated SMB log import, an offline SOC dashboard, and o
 - Structured JSON reports
 - Human-readable SOC summaries
 - Command-line interface
+- Optional PySide6 desktop GUI with seven workflow pages
+- GUI-based log analysis, findings review, and report browsing
+- Optional GUI-based local AI investigation
 - Automated SMB log import
 - Duplicate prevention using SHA-256
 - Offline, read-only HTML dashboard
@@ -46,7 +48,8 @@ Findings require analyst review. A detection does not independently confirm mali
 
 ## Requirements
 
-- Python 3.13
+- Python 3.13 (`>=3.13,<3.14`)
+- PySide6 6.12 or later within major version 6 for the optional desktop GUI
 - macOS or Linux for the core CLI (requires `os.O_NOFOLLOW` support)
 - Windows is supported as a Security event export source; native Windows CLI execution is not currently supported
 - Ollama and a compatible local model for optional AI analysis
@@ -65,35 +68,46 @@ python3 -m venv .venv
 source .venv/bin/activate
 ```
 
-Install LogVigil:
+Install the core CLI:
 
 ```bash
 python -m pip install -e .
 ```
 
+To install the desktop GUI as well, use `python -m pip install -e ".[gui]"` instead.
+
 On Windows, use the appropriate virtual environment activation command for your shell.
 
-## Desktop GUI (v1.1.0 Development)
+## Desktop GUI (v1.1.0)
 
-LogVigil provides an optional PySide6 desktop interface with seven pages: Dashboard, Log Import, Run Analysis, AI Investigation, Findings, Reports, and Settings.
+LogVigil v1.1.0 includes an optional PySide6 desktop interface for local security analysis. It uses the existing deterministic detection and reporting functionality rather than replacing the CLI.
 
-Install the GUI dependency:
+### GUI Installation and Launch
+
+From the project directory, with the Python 3.13 virtual environment activated:
 
 ```bash
 python -m pip install -e ".[gui]"
-```
-
-Start the GUI:
-
-```bash
 python -m soc_assistant.gui.app
 ```
 
-Run these commands inside an activated Python virtual environment.
+The desktop GUI provides seven pages:
 
-The GUI uses the existing deterministic detection engine. Optional AI investigation requires a running local Ollama service and a compatible model such as `qwen3:4b`. AI assessments are advisory and require human review. No automatic security response actions are performed.
+| Page | Purpose |
+|------|---------|
+| Dashboard | Review locally stored analysis summaries and key counts |
+| Log Import | Access the log import workflow |
+| Run Analysis | Run deterministic analysis on supported JSONL logs |
+| AI Investigation | Request optional local AI-assisted investigation |
+| Findings | Review security findings produced by analysis |
+| Reports | Browse locally stored analysis reports |
+| Settings | Review GUI configuration and local integration information |
 
-The GUI is under development and is not included in the published v1.0.0 release.
+The GUI is intended for a local desktop environment. Headless CI runs its GUI regression tests with `QT_QPA_PLATFORM=offscreen`; that setting is not required for normal desktop use.
+
+Optional AI investigation requires a separately running Ollama service and a compatible local model, such as `qwen3:4b`. The GUI distinguishes verified evidence from AI-generated assessments. AI output is advisory, requires human review, and does not authorize automatic security response actions.
+
+The GUI and the existing static HTML dashboard are separate interfaces. The HTML dashboard remains read-only and does not provide live monitoring.
 
 ## Command-Line Usage
 
@@ -135,7 +149,7 @@ logvigil events.jsonl --ai-context
 
 ## Automated SMB Log Import
 
-LogVigil v1.0.0 includes a macOS SMB importer:
+LogVigil includes a macOS SMB importer (introduced in v1.0.0):
 
 `src/soc_assistant/logvigil_smb_import.py`
 
@@ -236,7 +250,7 @@ AI analysis is optional. Core detection and reporting do not require Ollama.
 
 ## Local RAG Integration
 
-LogVigil v1.0.0 introduces optional local retrieval-augmented generation (RAG).
+LogVigil supports optional local retrieval-augmented generation (RAG), introduced in v1.0.0.
 
 The implementation is located in:
 
@@ -338,10 +352,10 @@ Never commit private telemetry, credentials, authentication tokens, or sensitive
 
 ## Testing
 
-Install development dependencies:
+Install development and GUI dependencies to run the complete test suite:
 
 ```bash
-python -m pip install -e ".[dev]"
+python -m pip install -e ".[dev,gui]"
 ```
 
 Run automated tests:
@@ -349,6 +363,18 @@ Run automated tests:
 ```bash
 python -m pytest -q
 ```
+
+For headless Linux CI, the workflow installs the required EGL runtime library and sets `QT_QPA_PLATFORM=offscreen` for Qt-based tests.
+
+### Version 1.1.0 Validation
+
+- 420 automated tests passed locally on Python 3.13.
+- GitHub Actions Python 3.13 test workflow passed after adding the optional GUI dependencies and Linux EGL library.
+- PySide6 GUI regression tests cover AI result handling and process lifecycle safeguards.
+- The Python wheel was built and the packaged GUI SVG assets were verified.
+- The desktop GUI was manually checked on macOS.
+
+The automated suite and manual checks provide regression coverage, not a guarantee of production readiness.
 
 ### Version 1.0.0 Validation
 
@@ -393,22 +419,40 @@ python -m build
 
 Generated packages are stored in `dist/`.
 
-A clean package build and installation check were completed as part of the v1.0.0 release validation.
+A clean package build and installation check were completed as part of the v1.0.0 release validation. For v1.1.0, the wheel was built and the packaged GUI assets were verified.
 
 ## Project Status
 
-**Latest stable version:** 1.0.0
+**Latest published version:** 1.1.0 — Desktop GUI (October 18, 2026).
 
-**Release status:** v1.0.0 officially published on October 15, 2026.
+**Published release:** [LogVigil v1.1.0](https://github.com/m-mehdi-sec/LogVigil/releases/tag/v1.1.0)
 
-### Phase 1 — Completed
+### v1.1.0 — Desktop GUI (Published)
 
-The initial release included:
+- Optional PySide6 desktop GUI with seven pages
+- Existing deterministic detection engine and CLI preserved
+- GUI-based local analysis, findings, reports, and optional AI investigation
+- Process lifecycle safeguards and additional GUI regression tests
+- Optional GUI installation dependency and packaged SVG assets
+- 420 locally passing automated tests and a successful GitHub Actions workflow
+
+### v1.0.0 — SMB Import, Dashboard, and Local RAG (Published)
+
+- Windows Security export integration from the Hyper-V lab
+- Automated SMB-based import on macOS
+- Local import state and SHA-256 duplicate prevention
+- Offline HTML dashboard
+- Optional local RAG knowledge retrieval with Qwen3
+- Additional regression and integration testing
+- Documentation of limitations and safety boundaries
+
+**Published release:** [LogVigil v1.0.0](https://github.com/m-mehdi-sec/LogVigil/releases/tag/v1.0.0)
+
+### v0.1.0 — Initial Release (Published)
 
 - Rule-based Windows security detection
 - Investigation correlation
-- JSON reporting
-- SOC summaries
+- JSON reporting and SOC summaries
 - Command-line interface
 - Optional local Ollama/Qwen integration
 - Automated regression testing
@@ -417,30 +461,14 @@ The initial release included:
 
 **Published release:** [LogVigil v0.1.0](https://github.com/m-mehdi-sec/LogVigil/releases/tag/v0.1.0)
 
-### Phase 2 — Implemented, Final Validation in Progress
-
-The second development phase adds:
-
-- Windows Security export integration from the Hyper-V lab
-- Automated SMB-based import on macOS
-- Local import state and duplicate prevention
-- Offline HTML dashboard
-- Optional local RAG knowledge retrieval
-- Qwen3 integration with retrieved reference context
-- Additional regression and integration testing
-- Documentation of limitations and safety boundaries
-
-### Future Development
-
-Potential future improvements include:
+### Potential Future Improvements
 
 - Broader authorized detection coverage
 - Additional validated local knowledge sources
 - Stronger export acknowledgment and retention controls
-- More complete dashboard functionality
 - Improved packaging and deployment automation
 
-Autonomous security response capabilities are outside the scope of LogVigil v1.0.0 and belong to a separate future project.
+Autonomous security response capabilities are outside the scope of LogVigil v1.1.0 and belong to a separate future project.
 
 LogVigil is a defensive learning and portfolio project, not a production-certified SOC platform.
 
